@@ -6,6 +6,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     LoginFail,
 
+    // -- Auth errors
+    AuthFailNoAuthTokenCookie,
+
     // -- Model
     TicketDeleteFailIdNotFound {
         id: u64,
@@ -14,7 +17,7 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        println!("INTORESP");
+        println!("My Err ----- ");
         (StatusCode::INTERNAL_SERVER_ERROR, "Err").into_response()
     }
 }

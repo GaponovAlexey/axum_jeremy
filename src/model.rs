@@ -9,7 +9,7 @@ pub struct Ticket {
     pub id: u64,
     pub title: String,
 }
-#[derive(Clone, Debug, Serialize)]
+#[derive(Deserialize)]
 pub struct TicketForCreate {
     pub title: String,
 }
@@ -25,7 +25,7 @@ impl ModelController {
     }
 }
 
-// CRUD IMPL
+// -- CRUD IMPL
 impl ModelController {
     pub async fn create_ticket(&self, ticket_fc: TicketForCreate) -> Result<Ticket> {
         let mut store = self.tickets_store.lock().unwrap();

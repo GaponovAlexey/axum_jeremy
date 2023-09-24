@@ -5,13 +5,15 @@ mod model;
 
 // use
 use std::net::SocketAddr;
+use model::ModelController;
 use serde::{ Deserialize, Serialize };
 // #![allow(unused)]
 use axum::{
     Router,
     routing::{ get, get_service },
     response::{ IntoResponse, Html, Response },
-    extract::{ Query, Path }, middleware,
+    extract::{ Query, Path },
+    middleware,
 };
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
@@ -19,17 +21,29 @@ use tower_http::services::ServeDir;
 pub use error::{ Error, Result };
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    let mc = ModelController::new().await?;
+
+    let routes_apis = web::routes_tickets
+        ::routes(mc.clone())
+        .route_layer(middleware::from_fn(web::mw_auth::mw_require_auth));
+
     let routes_all = Router::new()
+        // -- Routes
         .merge(routes())
         .merge(web::routes_login::routes())
+
+        .nest("/api", routes_apis)
+        // -- Layer
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
+        // -- Smart static routes
         .fallback_service(routes_static());
     // start
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
 
-    axum::Server::bind(&addr).serve(routes_all.into_make_service()).await.unwrap()
+    axum::Server::bind(&addr).serve(routes_all.into_make_service()).await.unwrap();
+    Ok(())
 }
 
 async fn main_response_mapper(res: Response) -> Response {
