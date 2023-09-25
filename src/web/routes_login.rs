@@ -19,7 +19,7 @@ async fn api_login(cookies: Cookies, payload: Json<LoginPayload>) -> Result<Json
 
     let body = Json(json!({
       "result": {
-        "seccess": true
+        "success": true
       }
     }));
     Ok(body)

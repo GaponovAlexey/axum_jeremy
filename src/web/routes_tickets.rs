@@ -15,8 +15,8 @@ async fn create_tickets(
     State(mc): State<ModelController>,
     Json(ticket_fc): Json<TicketForCreate>
 ) -> Result<Json<Ticket>> {
-    println!("Create_ticket");
     let ticket = mc.create_ticket(ticket_fc).await?;
+    println!("Create_ticket {:?} id: {:?}", ticket.title, ticket.id);
     Ok(Json(ticket))
 }
 async fn list_tickets(State(mc): State<ModelController>) -> Result<Json<Vec<Ticket>>> {
