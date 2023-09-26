@@ -37,6 +37,7 @@ async fn main() -> Result<()> {
         .nest("/api", routes_apis)
         // -- Layer
         .layer(middleware::map_response(main_response_mapper))
+        .layer(middleware::from_fn_with_state(mc.clone(), web::mw_auth::mw_ctx_resolver))
         .layer(CookieManagerLayer::new())
         // -- Smart static routes
         .fallback_service(routes_static());
@@ -59,7 +60,7 @@ fn routes_static() -> Router {
 }
 //
 fn routes() -> Router {
-    Router::new().route("/hi", get(hi)).route("/hi2/:path", get(hi2))
+    Router::new().route("/", get(hi)).route("/hi2/:path", get(hi2))
 }
 
 // handler

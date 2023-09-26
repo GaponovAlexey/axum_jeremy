@@ -1,7 +1,8 @@
 use axum::routing::{ post, delete };
 use axum::{ Json, Router };
 use axum::extract::{ State, Path };
-use crate::{  Result };
+use crate::ctx::Ctx;
+use crate::{ Result };
 use crate::model::{ ModelController, Ticket, TicketForCreate };
 
 pub fn routes(mc: ModelController) -> Router {
@@ -12,23 +13,26 @@ pub fn routes(mc: ModelController) -> Router {
 }
 
 async fn create_tickets(
+    ctx: Ctx,
     State(mc): State<ModelController>,
     Json(ticket_fc): Json<TicketForCreate>
 ) -> Result<Json<Ticket>> {
-    let ticket = mc.create_ticket(ticket_fc).await?;
-    println!("Create_ticket {:?} id: {:?}", ticket.title, ticket.id);
+    let ticket = mc.create_ticket(ctx, ticket_fc).await?;
+
     Ok(Json(ticket))
 }
-async fn list_tickets(State(mc): State<ModelController>) -> Result<Json<Vec<Ticket>>> {
+async fn list_tickets(ctx: Ctx, State(mc): State<ModelController>) -> Result<Json<Vec<Ticket>>> {
     println!("List tickets");
-    let tickets = mc.list_ticket().await?;
+    // -
+    let tickets = mc.list_ticket(ctx).await?;
     Ok(Json(tickets))
 }
 async fn delete_ticket(
+    ctx: Ctx,
     State(mc): State<ModelController>,
     Path(id): Path<u64>
 ) -> Result<Json<Ticket>> {
     println!("delete tickets");
-    let ticket = mc.delete_ticket(id).await?;
+    let ticket = mc.delete_ticket(id, ctx).await?;
     Ok(Json(ticket))
 }
