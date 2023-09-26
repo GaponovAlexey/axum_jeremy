@@ -3,9 +3,11 @@ mod error;
 mod web;
 mod model;
 mod ctx;
+mod log;
 
 // use
 use std::{ net::SocketAddr };
+use ctx::Ctx;
 use model::ModelController;
 use serde::{ Deserialize, Serialize };
 // #![allow(unused)]
@@ -15,7 +17,7 @@ use axum::{
     response::{ IntoResponse, Html, Response },
     extract::{ Query, Path },
     middleware,
-    Json,
+    Json, http::{Method, Uri},
 };
 use serde_json::json;
 use tower_cookies::CookieManagerLayer;
@@ -23,6 +25,8 @@ use tower_http::services::ServeDir;
 
 pub use error::{ Error, Result };
 use uuid::Uuid;
+
+use crate::log::log_request;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -51,7 +55,11 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn main_response_mapper(res: Response) -> Response {
+async fn main_response_mapper(
+    ctx: Option<Ctx>,
+    uri: Uri,
+    req_method: Method,
+    res: Response) -> Response {
     println!("Res_Mapper last ");
     let uuid = Uuid::new_v4();
 
@@ -70,7 +78,8 @@ async fn main_response_mapper(res: Response) -> Response {
         (*status_code, Json(client_error_body)).into_response()
     });
     // -- Todo:
-    println!("server log line - {uuid} -- Error: {service_error:?}");
+    let client_err = client_status_error.unzip().1;
+    log_request(uuid, req_method, uri,ctx, service_error, client_err).await;
 
     println!();
     error_response.unwrap_or(res)
