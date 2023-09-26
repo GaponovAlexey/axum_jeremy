@@ -15,11 +15,14 @@ use axum::{
     response::{ IntoResponse, Html, Response },
     extract::{ Query, Path },
     middleware,
+    Json,
 };
+use serde_json::json;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
 pub use error::{ Error, Result };
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -49,9 +52,28 @@ async fn main() -> Result<()> {
 }
 
 async fn main_response_mapper(res: Response) -> Response {
-    println!("Res_Mapper");
+    println!("Res_Mapper last ");
+    let uuid = Uuid::new_v4();
+
+    let service_error = res.extensions().get::<Error>();
+    let client_status_error = service_error.map(|se| se.client_status_and_error());
+    // -- if client error, create new response
+    let error_response = client_status_error.as_ref().map(|(status_code, client_err)| {
+        let client_error_body =
+            json!({
+            "error": {
+                "type": client_err.as_ref(),
+                "req_uuid": uuid.to_string(),
+            }
+        });
+        println!("->> Error : {:?}", client_error_body);
+        (*status_code, Json(client_error_body)).into_response()
+    });
+    // -- Todo:
+    println!("server log line - {uuid} -- Error: {service_error:?}");
+
     println!();
-    res
+    error_response.unwrap_or(res)
 }
 
 //

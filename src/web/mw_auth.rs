@@ -1,4 +1,3 @@
-use axum::RequestPartsExt;
 use axum::extract::{ FromRequestParts, State };
 use axum::http::Request;
 use axum::http::request::Parts;
@@ -27,7 +26,7 @@ pub async fn mw_ctx_resolver<B>(
     mut req: Request<B>,
     next: Next<B>
 ) -> Result<Response> {
-    println!("ResolV!");
+    println!("Ctx -- c");
     let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
     // -- Compute the Ctx
